@@ -15,10 +15,10 @@ user.post('/register', async (req, res) => {
     }
 })
 
-user.get('/login/:login/:password', async (req, res) => {
+user.get('/login', async (req, res) => {
     try {
-        const [login, password] = [req.params.login, req.params.password]
-        const authUserData = (await userService.login(login, password));
+        const [login, password] = [req.query.login, req.query.password];
+        const authUserData = (await userService.login(login as string, password as string));
         res.cookie('token', authUserData.token).send(authUserData.data);
     } catch (e) {
         res.status(500).send();
