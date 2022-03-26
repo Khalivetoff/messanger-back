@@ -8,6 +8,12 @@ export interface IUser {
     name: string;
 }
 
+export interface IPublicUser {
+    login: string;
+    role: ERole;
+    name: string;
+}
+
 export interface IRegisterEmit {
     login: string;
     password: string;

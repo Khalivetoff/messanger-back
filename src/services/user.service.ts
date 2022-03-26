@@ -1,4 +1,4 @@
-import {IRegisterEmit, ISetTokenEmit, IUser} from "../models/user";
+import {IPublicUser, IRegisterEmit, ISetTokenEmit, IUser} from "../models/user";
 import * as argon2 from 'argon2';
 import * as jwt from 'jsonwebtoken';
 import {ERole} from "../models/role";
@@ -12,8 +12,8 @@ class UserService extends Service {
         super(collectionName, schema);
     }
 
-    public getGeneratedToken(data: ISetTokenEmit): string {
-        return jwt.sign({_id: data._id, login: data.login}, SECRET_TOKEN, {expiresIn: EXPIRATION});
+    public getGeneratedToken(data: IPublicUser): string {
+        return jwt.sign({login: data.login, name: data.name, role: data.role}, SECRET_TOKEN, {expiresIn: EXPIRATION});
     }
 
     private async checkUserByLoginAndName(login: string, name: string): Promise<void> {
@@ -29,19 +29,31 @@ class UserService extends Service {
         }
     }
 
-    public async getFullUserByLogin(login: string): Promise<null | IUser> {
+    public async getFullUserDataByLogin(login: string): Promise<null | IUser> {
         return (await this.collection.findOne({login}));
     }
 
+    public async getPublicUserDataByToken(token: string): Promise<IPublicUser> {
+        return await jwt.verify(token, SECRET_TOKEN) as IPublicUser;
+    }
+
+    public async getPublicUserDataByLogin(login: string): Promise<IPublicUser> {
+        const user = await this.getFullUserDataByLogin(login);
+        if (!user) {
+            throw Error('User not found');
+        }
+        return {login: user.login, role: user.role, name: user.name};
+    }
+
     public async login(login: string, password: string): Promise<string> {
-        const userData = await this.getFullUserByLogin(login);
+        const userData = await this.getFullUserDataByLogin(login);
         if (!userData) {
             throw Error('User not found');
         }
         if (!await argon2.verify(userData.password, password)) {
             throw Error('Incorrect password');
         }
-        const token = this.getGeneratedToken({_id: String(userData._id), login: userData.login});
+        const token = this.getGeneratedToken({login: userData.login, name: userData.name, role: userData.role});
         if (!token) {
             throw Error('Token create error');
         }
