@@ -8,18 +8,14 @@ export interface IUser {
     name: string;
 }
 
-export interface IExternalUser {
-    login: string;
-    name: string;
-}
-
-export interface IExternalUserWithToken {
-    token: string;
-    data: IExternalUser;
-}
-
 export interface IRegisterEmit {
     login: string;
     password: string;
     name: string;
+}
+
+export interface ISetTokenEmit {
+    [key: string]: unknown;
+    _id: string;
+    login: string;
 }
