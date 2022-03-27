@@ -1,15 +1,19 @@
-import {IPublicUser, IRegisterEmit, ISetTokenEmit, IUser} from "../models/user";
+import {IPublicUser, IRegisterEmit, IUser} from "../models/user";
 import * as argon2 from 'argon2';
 import * as jwt from 'jsonwebtoken';
 import {ERole} from "../models/role";
 import {EXPIRATION, SECRET_TOKEN} from "../constants/token.const";
-import mongoose from "mongoose";
 import Service from "../models/service";
 
 class UserService extends Service {
 
-    public constructor(collectionName: string, schema: mongoose.SchemaDefinition) {
-        super(collectionName, schema);
+    public constructor() {
+        super('User', {
+            login: String,
+            password: String,
+            role: Number,
+            name: String
+        });
     }
 
     public getGeneratedToken(data: IPublicUser): string {
@@ -35,6 +39,10 @@ class UserService extends Service {
 
     public async getPublicUserDataByToken(token: string): Promise<IPublicUser> {
         return await jwt.verify(token, SECRET_TOKEN) as IPublicUser;
+    }
+
+    public async getUserIdBuLogin(login: string): Promise<string | undefined> {
+        return (await this.getFullUserDataByLogin(login))?._id?.toString();
     }
 
     public async getPublicUserDataByLogin(login: string): Promise<IPublicUser> {

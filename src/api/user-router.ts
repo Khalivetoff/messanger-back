@@ -1,12 +1,12 @@
-import {IRegisterEmit} from "../../models/user";
+import {IRegisterEmit} from "../models/user";
 import express from "express";
-import {userService} from "../../services/init";
-import {TOKEN_NAME} from "../../constants/token.const";
-import isAuth from "../../middleware/isAuth";
+import {userService} from "../services/init";
+import {TOKEN_NAME} from "../constants/token.const";
+import isAuth from "../middleware/isAuth";
 
-const user = express.Router();
+const userRouter = express.Router();
 
-user.post('/register', async (req, res) => {
+userRouter.post('/register', async (req, res) => {
     try {
         const userData = req.body as IRegisterEmit;
         const token = (await userService.register(userData));
@@ -16,9 +16,9 @@ user.post('/register', async (req, res) => {
     }
 })
 
-user.get('/login', async (req, res) => {
+userRouter.get('/login', async (req, res) => {
     try {
-        const [login, password] = [req.query.login, req.query.password];
+        const {login, password} = req.query;
         if (!login || !password) {
             throw Error('Login or pass not present');
         }
@@ -29,7 +29,15 @@ user.get('/login', async (req, res) => {
     }
 })
 
-user.get('/', isAuth, async (req, res) => {
+userRouter.get('/logout', isAuth, async (req, res) => {
+    try {
+        res.clearCookie(TOKEN_NAME).send('User success logout');
+    } catch (e: any) {
+        res.status(500);
+    }
+})
+
+userRouter.get('/', isAuth, async (req, res) => {
     try {
         const token = req.headers?.authorization?.split(' ')[0] as string;
         res.json(await userService.getPublicUserDataByToken(token));
@@ -38,4 +46,4 @@ user.get('/', isAuth, async (req, res) => {
     }
 })
 
-export default user;
+export default userRouter;

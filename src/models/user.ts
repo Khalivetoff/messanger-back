@@ -19,9 +19,3 @@ export interface IRegisterEmit {
     password: string;
     name: string;
 }
-
-export interface ISetTokenEmit {
-    [key: string]: unknown;
-    _id: string;
-    login: string;
-}
