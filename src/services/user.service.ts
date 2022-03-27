@@ -82,6 +82,10 @@ class UserService extends Service {
             throw Error(e.message);
         }
     }
+
+    public async getFullUserList(): Promise<IPublicUser[]> {
+        return (await this.collection.find())?.map(({login, role, name}) => ({ login, role, name }));
+    }
 }
 
 export default UserService;

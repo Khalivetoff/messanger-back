@@ -46,4 +46,12 @@ userRouter.get('/', isAuth, async (req, res) => {
     }
 })
 
+userRouter.get('/user-list', isAuth, async (req, res) => {
+    try {
+        res.json(await userService.getFullUserList());
+    } catch (e) {
+        res.status(500);
+    }
+})
+
 export default userRouter;

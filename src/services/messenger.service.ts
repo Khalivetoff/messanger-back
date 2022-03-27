@@ -3,30 +3,44 @@ import Dialog from "./dialog.service";
 import MessengerItemService from "./messenger-item.service";
 import {userService} from "./init";
 import Message from "./message.service";
+import mongoose from "mongoose";
 
 class MessengerService extends Service {
     public constructor() {
-        super('Messenger', {
-            senderId: String,
-            dialogs: [{recipientId: String, messageList: [{sendTime: String, isDelivered: Boolean, text: String, isSentByOwner: Boolean}]}]
+        super('Dialog', {
+            participantListId: [String],
+            isGroup: Boolean,
+            messageList: [{sendTime: String, isDelivered: Boolean, text: String, isSentByOwner: Boolean}]
         });
     }
 
-    public async addMessage(senderLogin: string, recipientLogin: string, text: string): Promise<void> {
-        const [senderId, recipientId] = [await userService.getUserIdBuLogin(senderLogin), await userService.getUserIdBuLogin(recipientLogin)];
-        if (!senderId || !recipientId) {
-            throw Error('User not found');
+    public async createDialog(participantIdList: string[], isGroup = false): Promise<string> {
+        const dialog = new this.collection(new Dialog(participantIdList, isGroup));
+        dialog.save();
+        return dialog._id;
+    }
+
+    public async getDialogById(dialogId: string): Promise<Dialog | null> {
+        return await this.collection.findOne({_id: dialogId});
+    }
+
+    public async getDialogListByUserId(userId: string): Promise<Dialog[]> {
+        return (await this.collection.find({participantListId: {$all: [userId]}}))
+    }
+
+    public async addMessageToDialog(dialogId: string, text: string, senderId: string): Promise<void> {
+        const currentDialog = await this.collection.findOne({_id: dialogId});
+        if (!currentDialog) {
+            throw Error('Dialog not found');
         }
-        const messengerItem = (await this.collection.findOne({senderId}));
-        if (!messengerItem) {
-            const dialog = new Dialog(recipientId);
-            dialog.addMessage(text, senderId);
-            const newMessengerItem = new this.collection(new MessengerItemService(senderId, [dialog]));
-            newMessengerItem.save();
-            return;
-        }
-        messengerItem.dialogs.find((dialog: Dialog) => dialog.recipientId === recipientId)?.messageList.push(new Message(text, senderId));
-        messengerItem.save();
+        currentDialog?.messageList.push(new Message(text, senderId));
+        currentDialog.save();
+    }
+
+    public async addMessageToNewDialog(participantLoginList: string[], text: string, senderId: string, senderLogin: string, isGroup = false): Promise<void> {
+        const userIdList = participantLoginList.map(async (login) => (await userService.getUserIdBuLogin(login))) as unknown as string[];
+        const dialogId = await this.createDialog(userIdList, isGroup);
+        this.addMessageToDialog(dialogId, text, await userService.getUserIdBuLogin(senderLogin) as string);
     }
 }
 

@@ -3,7 +3,7 @@ import Message from "./message.service";
 class Dialog {
     public messageList: Message[];
 
-    public constructor(public recipientId: string) {
+    public constructor(public participantIdList: string[], public isGroup = false) {
         this.messageList = [];
     };
 
