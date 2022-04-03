@@ -41,10 +41,6 @@ class UserService extends Service {
         return await jwt.verify(token, SECRET_TOKEN) as IPublicUser;
     }
 
-    public async getUserIdBuLogin(login: string): Promise<string | undefined> {
-        return (await this.getFullUserDataByLogin(login))?._id?.toString();
-    }
-
     public async getPublicUserDataByLogin(login: string): Promise<IPublicUser> {
         const user = await this.getFullUserDataByLogin(login);
         if (!user) {

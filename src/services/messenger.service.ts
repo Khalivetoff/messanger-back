@@ -1,46 +1,58 @@
 import Service from "../models/service";
 import Dialog from "./dialog.service";
-import MessengerItemService from "./messenger-item.service";
 import {userService} from "./init";
 import Message from "./message.service";
-import mongoose from "mongoose";
+import {IPublicUser} from "../models/user";
 
 class MessengerService extends Service {
     public constructor() {
         super('Dialog', {
-            participantListId: [String],
+            participantLoginList: [String],
             isGroup: Boolean,
-            messageList: [{sendTime: String, isDelivered: Boolean, text: String, isSentByOwner: Boolean}]
+            messageList: [{sendTime: String, isDelivered: Boolean, text: String, senderLogin: String}]
         });
     }
 
-    public async createDialog(participantIdList: string[], isGroup = false): Promise<string> {
-        const dialog = new this.collection(new Dialog(participantIdList, isGroup));
+    private async createDialog(participantLoginList: string[], isGroup = false): Promise<Dialog & {_id: string}> {
+        const dialog = new this.collection(new Dialog(participantLoginList, isGroup));
         dialog.save();
-        return dialog._id;
+        return dialog;
     }
 
-    public async getDialogById(dialogId: string): Promise<Dialog | null> {
-        return await this.collection.findOne({_id: dialogId});
-    }
-
-    public async getDialogListByUserId(userId: string): Promise<Dialog[]> {
-        return (await this.collection.find({participantListId: {$all: [userId]}}))
-    }
-
-    public async addMessageToDialog(dialogId: string, text: string, senderId: string): Promise<void> {
+    public async addMessageToDialog(dialogId: string, text: string, senderLogin: string): Promise<Dialog> {
         const currentDialog = await this.collection.findOne({_id: dialogId});
         if (!currentDialog) {
             throw Error('Dialog not found');
         }
-        currentDialog?.messageList.push(new Message(text, senderId));
+        currentDialog?.messageList.push(new Message(text, senderLogin));
         currentDialog.save();
+        return currentDialog;
     }
 
-    public async addMessageToNewDialog(participantLoginList: string[], text: string, senderId: string, senderLogin: string, isGroup = false): Promise<void> {
-        const userIdList = participantLoginList.map(async (login) => (await userService.getUserIdBuLogin(login))) as unknown as string[];
-        const dialogId = await this.createDialog(userIdList, isGroup);
-        this.addMessageToDialog(dialogId, text, await userService.getUserIdBuLogin(senderLogin) as string);
+    public async addMessageToNewDialog(participantLoginList: string[], text: string, senderLogin: string, isGroup = false): Promise<Dialog> {
+        const dialogId = (await this.createDialog(participantLoginList, isGroup))._id;
+        return await this.addMessageToDialog(dialogId, text, senderLogin);
+    }
+
+    private getDialogWithCroppedMessageList(dialog: (Dialog & {_id: string}), interval: [number, number]): Dialog & {_id: string} {
+        return {...dialog, messageList: dialog.messageList.slice(interval[0], interval[1])}
+    }
+
+    public async getCroppedDialogList(login: string, interval: [number, number]): Promise<(Dialog & { _id: string })[]> {
+        const dialogList = (await this.collection.find({participantLoginList: {$all: [login]}})) as (Dialog & { _id: string })[];
+        return dialogList.map((dialog) => this.getDialogWithCroppedMessageList(
+            {
+                messageList: dialog.messageList,
+                _id: dialog._id,
+                participantLoginList: dialog.participantLoginList,
+                isGroup: dialog.isGroup
+            },
+            [0, 20]
+        ));
+    }
+
+    public async getUserListWithoutCurrentUser(currentUserLogin: string): Promise<IPublicUser[]> {
+        return (await userService.getFullUserList())?.filter(({login}) => login !== currentUserLogin);
     }
 }
 
