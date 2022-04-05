@@ -34,11 +34,11 @@ class MessengerService extends Service {
         return await this.addMessageToDialog(dialogId, text, senderLogin);
     }
 
-    private getDialogWithCroppedMessageList(dialog: (Dialog & {_id: string}), interval: [number, number]): Dialog & {_id: string} {
-        return {...dialog, messageList: dialog.messageList.slice(interval[0], interval[1])}
+    private getDialogWithCroppedMessageList(dialog: (Dialog & {_id: string}), start: number, end?: number): Dialog & {_id: string} {
+        return {...dialog, messageList: dialog.messageList.slice(start, end)}
     }
 
-    public async getCroppedDialogList(login: string, interval: [number, number]): Promise<(Dialog & { _id: string })[]> {
+    public async getCroppedDialogList(login: string, start: number, end?: number): Promise<(Dialog & { _id: string })[]> {
         const dialogList = (await this.collection.find({participantLoginList: {$all: [login]}})) as (Dialog & { _id: string })[];
         return dialogList.map((dialog) => this.getDialogWithCroppedMessageList(
             {
@@ -47,7 +47,8 @@ class MessengerService extends Service {
                 participantLoginList: dialog.participantLoginList,
                 isGroup: dialog.isGroup
             },
-            [0, 20]
+            start,
+            end
         ));
     }
 

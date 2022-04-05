@@ -5,7 +5,9 @@ import {messengerService} from "../services/init";
 const initMessengerSocket = async (socket: Socket): Promise<void> => {
     socket.emit(ESocketEvents.Init, {
         userList: await messengerService.getUserListWithoutCurrentUser(socket.handshake.auth.login),
-        dialogList: await messengerService.getCroppedDialogList(socket.handshake.auth.login, [0, 20])
+        //FIXME: реализовать загрузку загрузку сообщений по кускам
+        dialogList: await messengerService.getCroppedDialogList(socket.handshake.auth.login, 0, 20)
+        // dialogList: await messengerService.getCroppedDialogList(socket.handshake.auth.login, 0)
     })
 
     socket.on(ESocketEvents.AddMessageInDialog, async (wrapper: ISocketWrapper<{ dialogId: string, text: string }>) => {
