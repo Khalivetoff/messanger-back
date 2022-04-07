@@ -13,40 +13,49 @@ class MessengerService extends Service {
         });
     }
 
-    private async createDialog(participantLoginList: string[], isGroup = false): Promise<Dialog & {_id: string}> {
+    private async createDialog(participantLoginList: string[], isGroup = false): Promise<Dialog & { _id: string }> {
         const dialog = new this.collection(new Dialog(participantLoginList, isGroup));
-        dialog.save();
+        await dialog.save();
         return dialog;
     }
 
-    public async addMessageToDialog(dialogId: string, text: string, senderLogin: string): Promise<Dialog> {
-        const currentDialog = await this.collection.findOne({_id: dialogId});
-        if (!currentDialog) {
+    private async getDialogById(dialogId: string): Promise<Dialog & { _id: string }> {
+        return this.getParsedDialog(await this.collection.findOne({_id: dialogId}) as Dialog & { _id: string })
+    }
+
+    private getParsedDialog(dialog: Dialog & { _id: string }): Dialog & { _id: string } {
+        return {
+            _id: dialog._id,
+            participantLoginList: dialog.participantLoginList,
+            isGroup: dialog.isGroup,
+            messageList: dialog.messageList
+        }
+    }
+
+    public async addMessageToDialog(dialogId: string, text: string, senderLogin: string): Promise<{dialog: Dialog, message: Message}> {
+        const dialog = await this.collection.findOne({_id: dialogId});
+        if (!dialog) {
             throw Error('Dialog not found');
         }
-        currentDialog?.messageList.push(new Message(text, senderLogin));
-        currentDialog.save();
-        return currentDialog;
+        dialog?.messageList.push(new Message(text, senderLogin));
+        await dialog.save();
+        return { dialog, message: dialog.messageList[dialog.messageList.length - 1] }
     }
 
     public async addMessageToNewDialog(participantLoginList: string[], text: string, senderLogin: string, isGroup = false): Promise<Dialog> {
         const dialogId = (await this.createDialog(participantLoginList, isGroup))._id;
-        return await this.addMessageToDialog(dialogId, text, senderLogin);
+        await this.addMessageToDialog(String(dialogId), text, senderLogin);
+        return await this.getDialogById(String(dialogId));
     }
 
-    private getDialogWithCroppedMessageList(dialog: (Dialog & {_id: string}), start: number, end?: number): Dialog & {_id: string} {
-        return {...dialog, messageList: dialog.messageList.slice(start, end)}
+    private getDialogWithCroppedMessageList(dialog: (Dialog & { _id: string }), start: number, end?: number): Dialog & { _id: string } {
+        return {...dialog, messageList: dialog.messageList.slice(start, end)};
     }
 
     public async getCroppedDialogList(login: string, start: number, end?: number): Promise<(Dialog & { _id: string })[]> {
         const dialogList = (await this.collection.find({participantLoginList: {$all: [login]}})) as (Dialog & { _id: string })[];
         return dialogList.map((dialog) => this.getDialogWithCroppedMessageList(
-            {
-                messageList: dialog.messageList,
-                _id: dialog._id,
-                participantLoginList: dialog.participantLoginList,
-                isGroup: dialog.isGroup
-            },
+            this.getParsedDialog(dialog),
             start,
             end
         ));
