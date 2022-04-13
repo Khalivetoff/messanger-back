@@ -7,21 +7,37 @@ export enum ESocketEvents {
     AddMessageInNewDialog = '4',
     DialogCreate = '5',
     ForceDisconnect = '6',
-    GetMessages = '7',
+    GetMessageList = '7',
     Message = '8'
 }
 
-export interface IAddMessageInDialogDataSend {
+export interface IAddMessageInDialogDataRequest {
     dialogId: string;
     text: string;
 }
 
-export interface IAddMessageInNewDialogDataSend {
+export interface IAddMessageInNewDialogRequest {
     companionLogin: string;
     text: string;
 }
 
-export interface IAddMessageInDialogDataGet {
+export interface IAddMessageInDialogRequest {
     dialogId: string;
     message: Message;
+}
+
+export interface IDialog extends Dialog {
+    isAllMessagesReceived: boolean;
+    _id: string;
+}
+
+export interface IGetMessageListRequest {
+    dialogId: string;
+    messageIndex: number;
+}
+
+export interface IGetMessageListResponse {
+    dialogId: string;
+    isAllMessagesReceived: boolean;
+    messageList: Message[];
 }

@@ -3,6 +3,7 @@ import Dialog from "./dialog.service";
 import {userService} from "./init";
 import Message from "./message.service";
 import {IPublicUser} from "../models/user";
+import {IDialog} from "../models/messenger";
 
 class MessengerService extends Service {
     public constructor() {
@@ -32,14 +33,14 @@ class MessengerService extends Service {
         }
     }
 
-    public async addMessageToDialog(dialogId: string, text: string, senderLogin: string): Promise<{dialog: Dialog, message: Message}> {
+    public async addMessageToDialog(dialogId: string, text: string, senderLogin: string): Promise<{ dialog: Dialog, message: Message }> {
         const dialog = await this.collection.findOne({_id: dialogId});
         if (!dialog) {
             throw Error('Dialog not found');
         }
         dialog?.messageList.push(new Message(text, senderLogin));
         await dialog.save();
-        return { dialog, message: dialog.messageList[dialog.messageList.length - 1] }
+        return {dialog, message: dialog.messageList[dialog.messageList.length - 1]}
     }
 
     public async addMessageToNewDialog(participantLoginList: string[], text: string, senderLogin: string, isGroup = false): Promise<Dialog> {
@@ -48,11 +49,16 @@ class MessengerService extends Service {
         return await this.getDialogById(String(dialogId));
     }
 
-    private getDialogWithCroppedMessageList(dialog: (Dialog & { _id: string }), start: number, end?: number): Dialog & { _id: string } {
-        return {...dialog, messageList: dialog.messageList.slice(start, end)};
+    private getDialogWithCroppedMessageList(dialog: (Dialog & { _id: string }), start: number, end?: number): IDialog {
+        const messageList = dialog.messageList.slice(start, end);
+        return {
+            ...dialog,
+            messageList,
+            isAllMessagesReceived: !!messageList.length && (messageList[0] as Message & { _id: string })._id === (dialog.messageList[0] as Message & { _id: string })._id
+        };
     }
 
-    public async getCroppedDialogList(login: string, start: number, end?: number): Promise<(Dialog & { _id: string })[]> {
+    public async getCroppedDialogList(login: string, start: number, end?: number): Promise<IDialog[]> {
         const dialogList = (await this.collection.find({participantLoginList: {$all: [login]}})) as (Dialog & { _id: string })[];
         return dialogList.map((dialog) => this.getDialogWithCroppedMessageList(
             this.getParsedDialog(dialog),
@@ -63,6 +69,10 @@ class MessengerService extends Service {
 
     public async getUserListWithoutCurrentUser(currentUserLogin: string): Promise<IPublicUser[]> {
         return (await userService.getFullUserList())?.filter(({login}) => login !== currentUserLogin);
+    }
+
+    public async getCroppedDialog(dialogId: string, messageIndex: number): Promise<IDialog> {
+       return this.getDialogWithCroppedMessageList(await this.getDialogById(dialogId), -(messageIndex + 20), -messageIndex);
     }
 }
 

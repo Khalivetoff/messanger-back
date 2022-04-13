@@ -2,7 +2,7 @@ import {IPublicUser, IRegisterEmit, IUser} from "../models/user";
 import * as argon2 from 'argon2';
 import * as jwt from 'jsonwebtoken';
 import {ERole} from "../models/role";
-import {EXPIRATION, SECRET_TOKEN} from "../constants/token.const";
+import {SECRET_TOKEN} from "../constants/token.const";
 import Service from "../models/service";
 
 class UserService extends Service {
@@ -17,7 +17,7 @@ class UserService extends Service {
     }
 
     public getGeneratedToken(data: IPublicUser): string {
-        return jwt.sign({login: data.login, name: data.name, role: data.role}, SECRET_TOKEN, {expiresIn: EXPIRATION});
+        return jwt.sign({login: data.login, name: data.name, role: data.role}, SECRET_TOKEN);
     }
 
     private async checkUserByLoginAndName(login: string, name: string): Promise<void> {
