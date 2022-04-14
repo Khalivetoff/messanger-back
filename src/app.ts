@@ -5,6 +5,7 @@ import userRouter from "./api/user-router";
 import './api/messenger-router'
 import {Server} from "socket.io";
 import initMessengerSocket from "./api/messenger";
+import agreementsRouter from "./api/agreements";
 
 mongoose.connect(`mongodb://127.0.0.1/messenger`);
 
@@ -34,3 +35,4 @@ io.on('connection', (socket) => {
 
 app.use(bodyParser.json());
 app.use('/api/user', userRouter);
+app.use('/api/agreements', agreementsRouter);
