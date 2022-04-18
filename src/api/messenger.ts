@@ -3,7 +3,9 @@ import {
     ESocketEvents,
     IAddMessageInDialogRequest,
     IAddMessageInDialogDataRequest,
-    IAddMessageInNewDialogRequest, IGetMessageListRequest, IGetMessageListResponse
+    IAddMessageInNewDialogRequest,
+    IGetMessageListRequest,
+    IGetMessageListResponse
 } from "../models/messenger";
 import {messengerService} from "../services/init";
 import {io} from "../app";
