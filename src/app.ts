@@ -6,16 +6,14 @@ import './api/messenger-router'
 import {Server} from "socket.io";
 import initMessengerSocket from "./api/messenger";
 import agreementsRouter from "./api/agreements";
+import {CLIENT_URL, DB_PATH, PORT} from "./constants/config.const";
 
-mongoose.connect(`mongodb://127.0.0.1/messenger`);
+mongoose.connect(DB_PATH);
 
 const db = mongoose.connection;
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 const app = express();
-
-//FIXME: вынести в .env
-const PORT = 3000;
 
 const server = app.listen(PORT, () => {
     console.log(`server active on port: ${PORT}`);
@@ -23,7 +21,7 @@ const server = app.listen(PORT, () => {
 
 export const io = new Server(server, {
     cors: {
-        origin: 'http://localhost:8080',
+        origin: CLIENT_URL,
         allowedHeaders: ["my-custom-header"],
         credentials: true
     }

@@ -1,5 +1,5 @@
 import {NextFunction, Request, Response} from "express";
-import {TOKEN_NAME} from "../constants/token.const";
+import {TOKEN_NAME} from "../constants/config.const";
 import {userService} from "../services/init";
 
 const isAuth = async (req: Request, res: Response, next: NextFunction): Promise<void> => {

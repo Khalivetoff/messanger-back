@@ -2,8 +2,8 @@ import {IPublicUser, IRegisterEmit, IUser} from "../models/user";
 import * as argon2 from 'argon2';
 import * as jwt from 'jsonwebtoken';
 import {ERole} from "../models/role";
-import {SECRET_TOKEN} from "../constants/token.const";
 import Service from "../models/service";
+import {SECRET_TOKEN} from "../constants/config.const";
 
 class UserService extends Service {
 

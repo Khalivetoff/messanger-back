@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "tsc-watch": "tsc-watch",
-    "serve": "nodemon dist/app.js"
+    "serve": "nodemon NODE_ENV=development dist/app.js"
   },
   "author": "xii",
   "license": "ISC",
@@ -14,7 +14,7 @@
     "body-parser": "^1.19.2",
     "express": "^4.17.3",
     "jsonwebtoken": "^8.5.1",
-    "moment": "^2.29.1",
+    "moment": "^2.29.3",
     "mongoose": "^6.2.7",
     "nodemon": "^2.0.15",
     "socket.io": "^4.4.1",

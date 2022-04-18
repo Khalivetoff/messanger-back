@@ -1,7 +1,7 @@
 import {IRegisterEmit} from "../models/user";
 import express from "express";
 import {userService} from "../services/init";
-import {TOKEN_NAME} from "../constants/token.const";
+import {TOKEN_NAME} from "../constants/config.const";
 import isAuth from "../middleware/isAuth";
 
 const userRouter = express.Router();
