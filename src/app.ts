@@ -4,9 +4,10 @@ import mongoose from "mongoose";
 import userRouter from "./api/user-router";
 import './api/messenger-router'
 import {Server} from "socket.io";
-import initMessengerSocket from "./api/messenger";
+import initMessengerSocket from "./api/messenger-router";
 import agreementsRouter from "./api/agreements";
 import {CLIENT_URL, DB_PATH, PORT} from "./constants/config.const";
+import * as path from "path";
 
 mongoose.connect(DB_PATH);
 
@@ -32,5 +33,9 @@ io.on('connection', (socket) => {
 })
 
 app.use(bodyParser.json());
+app.use(express.static(__dirname + '/client'));
 app.use('/api/user', userRouter);
 app.use('/api/agreements', agreementsRouter);
+app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '/client/index.html'));
+})
