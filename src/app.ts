@@ -5,7 +5,7 @@ import userRouter from "./api/user-router";
 import './api/messenger-router'
 import {Server} from "socket.io";
 import initMessengerSocket from "./api/messenger-router";
-import agreementsRouter from "./api/agreements";
+import agreementsRouter from "./api/agreements-router";
 import {CLIENT_URL, DB_PATH, PORT} from "./constants/config.const";
 import * as path from "path";
 
