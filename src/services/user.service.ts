@@ -26,10 +26,10 @@ class UserService extends Service {
             return;
         }
         if (savedUser.login === login) {
-            throw Error('Login is taken');
+            throw Error('Логин занят');
         }
         if (savedUser.name === name) {
-            throw Error('Name is taken');
+            throw Error('Имя занято');
         }
     }
 
@@ -45,7 +45,7 @@ class UserService extends Service {
     public async getPublicUserDataByLogin(login: string): Promise<IPublicUser> {
         const user = await this.getFullUserDataByLogin(login);
         if (!user) {
-            throw Error('User not found');
+            throw Error('Пользователь не найден');
         }
         return {login: user.login, role: user.role, name: user.name};
     }
@@ -53,14 +53,14 @@ class UserService extends Service {
     public async login(login: string, password: string): Promise<string> {
         const userData = await this.getFullUserDataByLogin(login);
         if (!userData) {
-            throw Error('User not found');
+            throw Error('Пользователь не найден');
         }
         if (!await argon2.verify(userData.password, password)) {
-            throw Error('Incorrect password');
+            throw Error('Неправильный пароль');
         }
         const token = this.getGeneratedToken({login: userData.login, name: userData.name, role: userData.role});
         if (!token) {
-            throw Error('Token create error');
+            throw Error('Ошибка на сервере');
         }
         return token;
     }
